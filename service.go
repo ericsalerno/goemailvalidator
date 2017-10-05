@@ -45,24 +45,25 @@ func (service *Service) printOutput(w http.ResponseWriter, r *Response) {
 		log.Fatal(err)
 	}
 
-	w.WriteHeader(r.status)
+	w.WriteHeader(r.Status)
 	w.Write(output)
 }
 
 func (service *Service) getResponseError(errorString string) *Response {
 	r := Response{}
-	r.status = 500
-	r.message = errorString
-	r.email = service.inputEmail
+	r.Status = 500
+	r.Message = errorString
+	r.Email = service.inputEmail
 
 	return &r
 }
 
 func (service *Service) getResponseOutput(isValid bool) *Response {
 	r := Response{}
-	r.status = 200
-	r.message = "OK"
-	r.email = service.inputEmail
+	r.Status = 200
+	r.Message = "OK"
+	r.Email = service.inputEmail
+	r.Valid = isValid
 
 	return &r
 }

@@ -2,8 +2,8 @@ package goemailvalidator
 
 // Response output for json marshalling
 type Response struct {
-	status  int
-	message string
-	email   string
-	valid   bool
+	Status  int    `json:"status"`
+	Message string `json:"message"`
+	Email   string `json:"email"`
+	Valid   bool   `json:"valid"`
 }
