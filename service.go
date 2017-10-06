@@ -50,7 +50,7 @@ func (service *Service) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	go request.validateUser(service.validEmailUser)
 	go request.validateBlackList(service.config)
 
-	response := service.getResponseOutput(&request, true)
+	response := service.getResponseOutput(&request, request.validHost && request.validUser && request.validPreliminary)
 	service.printOutput(w, response)
 }
 
