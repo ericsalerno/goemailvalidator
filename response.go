@@ -6,4 +6,7 @@ type Response struct {
 	Message string `json:"message"`
 	Email   string `json:"email"`
 	Valid   bool   `json:"valid"`
+
+	Host string `json:"host"`
+	User string `json:"user"`
 }
