@@ -5,19 +5,23 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"strings"
+	"regexp"
 )
 
 // Service is the service listener for email validation
 type Service struct {
-	config *Configuration
+	config           *Configuration
+	validEmailUser   *regexp.Regexp
+	validEmailHost   *regexp.Regexp
+	validEmailHostIP *regexp.Regexp
 }
 
 // Listen for connections and respond
 func (service *Service) Listen(config *Configuration) {
 	service.config = config
+	service.buildRegularExpressions()
 
-	http.Handle("/validate", service)
+	http.Handle("/", service)
 
 	serverInfo := fmt.Sprintf(":%d", config.Port)
 	log.Fatal(http.ListenAndServe(serverInfo, nil))
@@ -34,18 +38,17 @@ func (service *Service) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	request.inputEmail = r.PostFormValue("email")
+	request.buildFromEmail(r.PostFormValue("email"))
 
-	atPos := strings.Index(request.inputEmail, "@")
-
-	if atPos == -1 {
-		response := service.getResponseError(&request, "Invalid email, no @ found.")
+	if !request.validPreliminary {
+		response := service.getResponseError(&request, "Invalid email: "+request.invalidReason)
 		service.printOutput(w, response)
 		return
 	}
 
-	request.inputUser = request.inputEmail[0:atPos]
-	request.inputHost = request.inputEmail[atPos+1:]
+	go request.validateHost(service.validEmailHost, service.validEmailHostIP)
+	go request.validateUser(service.validEmailUser)
+	go request.validateBlackList(service.config)
 
 	response := service.getResponseOutput(&request, true)
 	service.printOutput(w, response)
@@ -83,4 +86,10 @@ func (service *Service) getResponseOutput(req *request, isValid bool) *Response 
 	r.User = req.inputUser
 
 	return &r
+}
+
+func (service *Service) buildRegularExpressions() {
+	service.validEmailUser = regexp.MustCompile(`^[a-zA-Z0-9!#$%&'*+/=\?^_\{\}|~\.-]+$`)
+	service.validEmailHost = regexp.MustCompile(`^[a-zA-Z0-9!#$%&\.-]+$`)
+	service.validEmailHostIP = regexp.MustCompile(`^\d{1-3}\.\d{1-3\.\d{1-3}\.\d{1-3}$`)
 }
