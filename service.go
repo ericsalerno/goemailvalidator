@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"regexp"
+	"strings"
 )
 
 // Service is the service listener for email validation
@@ -23,6 +24,8 @@ func (service *Service) Listen(config *Configuration) {
 
 	http.Handle("/", service)
 
+	fmt.Printf("Listening on port %d...\n", config.Port)
+
 	serverInfo := fmt.Sprintf(":%d", config.Port)
 	log.Fatal(http.ListenAndServe(serverInfo, nil))
 }
@@ -30,7 +33,9 @@ func (service *Service) Listen(config *Configuration) {
 func (service *Service) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	request := request{}
 
-	if r.PostFormValue("email") == "" {
+	testingEmail := strings.TrimSpace(r.PostFormValue("email"))
+
+	if testingEmail == "" {
 		log.Output(0, "Failed to process request without email post value.")
 
 		response := service.getResponseError(&request, "You must post an email address with the variable name 'email'.")
@@ -38,7 +43,7 @@ func (service *Service) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	request.buildFromEmail(r.PostFormValue("email"))
+	request.buildFromEmail(testingEmail)
 
 	if !request.validPreliminary {
 		response := service.getResponseError(&request, "Invalid email: "+request.invalidReason)
@@ -56,7 +61,7 @@ func (service *Service) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	<-complete
 	<-complete
 
-	response := service.getResponseOutput(&request, request.validHost && request.validUser && request.validPreliminary)
+	response := service.getResponseOutput(&request, request.validHost && request.validUser && request.validPreliminary && request.validBlacklist)
 	service.printOutput(w, response)
 }
 

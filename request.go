@@ -13,6 +13,7 @@ type request struct {
 	validPreliminary bool
 	validUser        bool
 	validHost        bool
+	validBlacklist   bool
 
 	invalidReason string
 }
@@ -68,20 +69,25 @@ func (r *request) validateHost(complete chan bool, validHostRegex *regexp.Regexp
 }
 
 func (r *request) validateBlackList(complete chan bool, c *Configuration) {
-	hostValue, ok := c.HostList[r.inputHost]
+	testHost := strings.ToLower(r.inputHost)
+	hostValue, ok := c.HostList[testHost]
 
+	// Domain not found in blacklist
 	if ok == false {
+		r.validBlacklist = true
 		complete <- true
 		return
 	}
 
+	// Domain exists and is blacklisted
 	if hostValue == 1 {
 		r.invalidReason = "Host " + r.inputHost + " found in blacklist."
-		r.validHost = false
+		r.validBlacklist = false
 		complete <- true
 		return
 	}
 
-	r.validHost = true
+	// Domain exists but isn't blacklisted (zero value)
+	r.validBlacklist = true
 	complete <- true
 }

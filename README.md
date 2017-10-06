@@ -1,6 +1,6 @@
 # goemailvalidator
 
-Email validation service written in golang. It will load a huge blacklist file and run the regular expressions and hashmap look-ups for the blacklist in parallel.
+Email validation service package written in golang. It will load a huge blacklist file and run the regular expressions and hashmap look-ups for the blacklist in parallel.
 
 This was built mostly for my own learning process with golang.
 

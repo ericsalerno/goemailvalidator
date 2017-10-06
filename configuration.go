@@ -1,6 +1,7 @@
 package goemailvalidator
 
 import (
+	"fmt"
 	"io/ioutil"
 	"strings"
 )
@@ -17,14 +18,17 @@ func (c *Configuration) LoadBlacklist(filename string) int {
 	dat, err := ioutil.ReadFile(filename)
 
 	if err != nil {
+		fmt.Println("Can not open file " + filename)
 		return 0
 	}
 
 	lines := strings.Split(string(dat), "\n")
+	c.HostList = make(map[string]int)
 
 	total := 0
 	for i := 0; i < len(lines); i++ {
-		host := lines[i]
+		host := strings.TrimSpace(lines[i])
+		host = strings.ToLower(host)
 
 		if host == "" {
 			continue
@@ -34,10 +38,11 @@ func (c *Configuration) LoadBlacklist(filename string) int {
 			continue
 		}
 
-		c.HostList[host] = 0
+		c.HostList[host] = 1
 
 		total++
 	}
+	fmt.Printf("Loaded %d blacklisted domains.\n", total)
 
 	return total
 }
