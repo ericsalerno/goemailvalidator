@@ -47,34 +47,41 @@ func (r *request) buildFromEmail(email string) {
 	r.validPreliminary = true
 }
 
-func (r *request) validateUser(validUserRegex *regexp.Regexp) {
+func (r *request) validateUser(complete chan bool, validUserRegex *regexp.Regexp) {
 	r.validUser = validUserRegex.MatchString(r.inputUser)
 
 	if r.validUser == false {
 		r.invalidReason = "User " + r.inputUser + " does not appear valid."
 	}
+
+	complete <- true
 }
 
-func (r *request) validateHost(validHostRegex *regexp.Regexp, validHostIPRegex *regexp.Regexp) {
+func (r *request) validateHost(complete chan bool, validHostRegex *regexp.Regexp, validHostIPRegex *regexp.Regexp) {
 	r.validHost = validHostRegex.MatchString(r.inputHost) || validHostIPRegex.MatchString(r.inputHost)
 
 	if r.validHost == false {
 		r.invalidReason = "Host " + r.inputHost + " does not appear valid."
 	}
+
+	complete <- true
 }
 
-func (r *request) validateBlackList(c *Configuration) {
+func (r *request) validateBlackList(complete chan bool, c *Configuration) {
 	hostValue, ok := c.HostList[r.inputHost]
 
 	if ok == false {
+		complete <- true
 		return
 	}
 
 	if hostValue == 1 {
 		r.invalidReason = "Host " + r.inputHost + " found in blacklist."
 		r.validHost = false
+		complete <- true
 		return
 	}
 
 	r.validHost = true
+	complete <- true
 }

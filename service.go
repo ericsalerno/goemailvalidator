@@ -46,9 +46,15 @@ func (service *Service) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	go request.validateHost(service.validEmailHost, service.validEmailHostIP)
-	go request.validateUser(service.validEmailUser)
-	go request.validateBlackList(service.config)
+	complete := make(chan bool, 3)
+
+	go request.validateHost(complete, service.validEmailHost, service.validEmailHostIP)
+	go request.validateUser(complete, service.validEmailUser)
+	go request.validateBlackList(complete, service.config)
+
+	<-complete
+	<-complete
+	<-complete
 
 	response := service.getResponseOutput(&request, request.validHost && request.validUser && request.validPreliminary)
 	service.printOutput(w, response)
