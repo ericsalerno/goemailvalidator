@@ -76,3 +76,24 @@ This is an example run of the the service using the blacklist.conf file from htt
 
         fmt.Printf("%s - %s = %t (%d - %s)\n", pass, response.Email, response.Valid, resp.StatusCode, response.Message)
     }
+
+Prints output
+
+    pass -  = false (500 - You must post an email address with the variable name 'email'.)
+    pass - test@test.com = true (200 - OK)
+    pass - asdfasdf = false (500 - Invalid email: Missing @)
+    pass - @test.com = false (500 - Invalid email: Missing user)
+    pass - a@a.com = true (200 - OK)
+    pass - a@localhost = true (200 - OK)
+    pass - user!@123.456.331.531 = true (200 - OK)
+    pass - blargh@host(* = false (200 - OK)
+
+## Output
+
+Example valid response
+
+    {"status":200,"message":"OK","email":"a@a.com","valid":true,"host":"a.com","user":"a"}
+
+Example invalid response
+
+    {"status":200,"message":"OK","email":"blargh@host(*","valid":false,"host":"host(*","user":"blargh"}
