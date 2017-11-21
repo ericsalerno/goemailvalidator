@@ -8,22 +8,15 @@ This was built mostly for my own learning process with golang.
 2. HTTP POST an "email" variable to http://localhost/
 3. read the json it returns
 
-## Example Service Code
+## Running via Docker
 
-This is an example run of the the service using the blacklist.conf file from https://raw.githubusercontent.com/martenson/disposable-email-domains/master/disposable_email_blacklist.conf
+The docker container pulls a blacklist.conf file from https://raw.githubusercontent.com/martenson/disposable-email-domains/master/disposable_email_blacklist.conf
 
-    package main
+    go get github.com/ericsalerno/goemailvalidator
+    docker build -t goemailvalidator ~/src/github.com/ericsalerno/goemailvalidator
+    docker run --publish 8081:8081 --name emailvalidator --rm goemailvalidator
 
-    import "github.com/ericsalerno/goemailvalidator"
-
-    func main() {
-        c := goemailvalidator.Configuration{}
-        c.Port = 8081
-        c.LoadBlacklist("blacklist.conf")
-
-        b := goemailvalidator.Service{}
-        b.Listen(&c)
-    }
+With the service now running 
 
 ## Example Test Client Code
 
@@ -35,60 +28,55 @@ This is an example run of the the service using the blacklist.conf file from htt
         "io/ioutil"
         "net/http"
         "net/url"
-
-        "github.com/ericsalerno/goemailvalidator"
+        "os"
     )
 
-    func main() {
-        testEmailValidate("", false)
-        testEmailValidate("test@test.com", true)
-        testEmailValidate("asdfasdf", false)
-        testEmailValidate("@test.com", false)
-        testEmailValidate("a@a.com", true)
-        testEmailValidate("a@localhost", true)
-        testEmailValidate("user!@123.456.331.531", true)
-        testEmailValidate("blargh@host(*", false)
+    type response struct {
+        Status  int    `json:"status"`
+        Message string `json:"message"`
+        Email   string `json:"email"`
+        Valid   bool   `json:"valid"`
+
+        Host string `json:"host"`
+        User string `json:"user"`
     }
 
-    func testEmailValidate(email string, expected bool) {
+    func main() {
+        if len(os.Args) < 2 {
+            fmt.Println("Usage: testemailpost <emailaddress>")
+            return
+        }
+
+        if validateEmail(os.Args[1]) == true {
+            fmt.Println(os.Args[1] + " is valid!")
+        } else {
+            fmt.Println(os.Args[1] + " is invalid!")
+        }
+    }
+
+    func validateEmail(email string) bool {
         resp, err := http.PostForm("http://localhost:8081/", url.Values{"email": {email}})
 
         if err != nil {
             fmt.Printf("Sorry there was an error: %s\n", err)
-            return
+            return false
         }
 
         defer resp.Body.Close()
         body, err := ioutil.ReadAll(resp.Body)
 
-        response := goemailvalidator.Response{}
+        response := response{}
         err = json.Unmarshal(body, &response)
 
         if err != nil {
             fmt.Printf("Sorry could not unmarshal json response: %s\n", err)
-            return
+            return false
         }
 
-        pass := "FAIL!"
-        if response.Valid == expected {
-            pass = "pass"
-        }
-
-        fmt.Printf("%s - %s = %t (%d - %s)\n", pass, response.Email, response.Valid, resp.StatusCode, response.Message)
+        return response.Valid
     }
 
-Prints output
-
-    pass -  = false (500 - You must post an email address with the variable name 'email'.)
-    pass - test@test.com = true (200 - OK)
-    pass - asdfasdf = false (500 - Invalid email: Missing @)
-    pass - @test.com = false (500 - Invalid email: Missing user)
-    pass - a@a.com = true (200 - OK)
-    pass - a@localhost = true (200 - OK)
-    pass - user!@123.456.331.531 = true (200 - OK)
-    pass - blargh@host(* = false (200 - OK)
-
-## Output
+## Service JSON Output
 
 Example valid response
 
