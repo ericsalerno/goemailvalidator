@@ -11,22 +11,21 @@ import (
 
 // Service is the service listener for email validation
 type Service struct {
-	config           *Configuration
+	Config           *Configuration
 	validEmailUser   *regexp.Regexp
 	validEmailHost   *regexp.Regexp
 	validEmailHostIP *regexp.Regexp
 }
 
 // Listen for connections and respond
-func (service *Service) Listen(config *Configuration) {
-	service.config = config
+func (service *Service) Listen() {
 	service.buildRegularExpressions()
 
 	http.Handle("/", service)
 
-	fmt.Printf("Listening on port %d...\n", config.Port)
+	fmt.Printf("Listening on port %d...\n", service.Config.Port)
 
-	serverInfo := fmt.Sprintf(":%d", config.Port)
+	serverInfo := fmt.Sprintf(":%d", service.Config.Port)
 	log.Fatal(http.ListenAndServe(serverInfo, nil))
 }
 
@@ -55,7 +54,7 @@ func (service *Service) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	go request.validateHost(complete, service.validEmailHost, service.validEmailHostIP)
 	go request.validateUser(complete, service.validEmailUser)
-	go request.validateBlackList(complete, service.config)
+	go request.validateBlackList(complete, service.Config)
 
 	<-complete
 	<-complete
@@ -101,6 +100,6 @@ func (service *Service) getResponseOutput(req *request, isValid bool) *Response 
 
 func (service *Service) buildRegularExpressions() {
 	service.validEmailUser = regexp.MustCompile(`^[a-zA-Z0-9!#$%&'*+/=\?^_\{\}|~\.-]+$`)
-	service.validEmailHost = regexp.MustCompile(`^[a-zA-Z0-9!#$%&\.-]+$`)
-	service.validEmailHostIP = regexp.MustCompile(`^\d{1-3}\.\d{1-3\.\d{1-3}\.\d{1-3}$`)
+	service.validEmailHost = regexp.MustCompile(`^[a-zA-Z0-9\.-]+$`)
+	service.validEmailHostIP = regexp.MustCompile(`^[1-9][0-9]{0,2}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$`)
 }

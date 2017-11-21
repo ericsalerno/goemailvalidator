@@ -59,6 +59,7 @@ func (r *request) validateUser(complete chan bool, validUserRegex *regexp.Regexp
 }
 
 func (r *request) validateHost(complete chan bool, validHostRegex *regexp.Regexp, validHostIPRegex *regexp.Regexp) {
+	//@TODO need a better way of making sure we end up on IP address if we think its a messed up ip address
 	r.validHost = validHostRegex.MatchString(r.inputHost) || validHostIPRegex.MatchString(r.inputHost)
 
 	if r.validHost == false {
