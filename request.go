@@ -1,4 +1,4 @@
-package goemailvalidator
+package main
 
 import (
 	"regexp"

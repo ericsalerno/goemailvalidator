@@ -1,4 +1,4 @@
-package goemailvalidator
+package main
 
 // Response output for json marshalling
 type Response struct {
