@@ -16,7 +16,7 @@ The docker container pulls a blacklist.conf file from https://raw.githubusercont
     docker build -t goemailvalidator ~/src/github.com/ericsalerno/goemailvalidator
     docker run --publish 8081:8081 --name emailvalidator --rm goemailvalidator
 
-With the service now running 
+With the service now running at http://localhost:8081/, post an "email" value to it.
 
 ## Example Test Client Code
 
