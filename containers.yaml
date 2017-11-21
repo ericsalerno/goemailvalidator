@@ -1,0 +1,8 @@
+version: v1
+containers:
+- name: goemailvalidator
+  image: ericsalerno/goemailvalidator
+  ports:
+  - name: http
+    hostPort: 80
+    containerPort: 8081
