@@ -8,7 +8,7 @@ This was built mostly for my own learning process with golang.
 2. HTTP POST an "email" variable to http://localhost/
 3. read the json it returns
 
-## Running via Docker
+## Running with local Docker container
 
 The docker container pulls a blacklist.conf file from https://raw.githubusercontent.com/martenson/disposable-email-domains/master/disposable_email_blacklist.conf
 
@@ -17,6 +17,12 @@ The docker container pulls a blacklist.conf file from https://raw.githubusercont
     docker run --publish 8081:8081 --name emailvalidator --rm goemailvalidator
 
 With the service now running at http://localhost:8081/, post an "email" value to it.
+
+## Running with docker cloud image
+
+    docker run ericsalerno/goemailvalidator
+
+More info on the docker cloud image is here https://cloud.docker.com/swarm/ericsalerno/repository/docker/ericsalerno/goemailvalidator/general
 
 ## Example Test Client Code
 
