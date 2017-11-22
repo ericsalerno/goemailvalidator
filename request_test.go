@@ -50,6 +50,34 @@ func individualValidEmailTest(t *testing.T, email string) {
 	}
 }
 
+func TestValidateBlacklist(t *testing.T) {
+
+	c := Configuration{}
+	c.LoadBlacklist("./test_data/test_blacklist.txt")
+
+	r := request{}
+	r.buildFromEmail("test@item1")
+
+	complete := make(chan bool, 1)
+	go r.validateBlackList(complete, &c)
+	<-complete
+
+	if r.validBlacklist == true {
+		t.Fatal("item1 bypassed blacklist!")
+	}
+
+	rf := request{}
+	rf.buildFromEmail("test@item44")
+
+	complete = make(chan bool, 1)
+	go rf.validateBlackList(complete, &c)
+	<-complete
+
+	if rf.validBlacklist == false {
+		t.Fatal("item44 failed blacklist!")
+	}
+}
+
 func TestInvalidEmailUserValidation(t *testing.T) {
 	individualInvalidEmailTest(t, "test ing@email.com")
 	individualInvalidEmailTest(t, "somet!$%*hing@123.1&556.734")

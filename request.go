@@ -87,8 +87,4 @@ func (r *request) validateBlackList(complete chan bool, c *Configuration) {
 		complete <- true
 		return
 	}
-
-	// Domain exists but isn't blacklisted (zero value)
-	r.validBlacklist = true
-	complete <- true
 }

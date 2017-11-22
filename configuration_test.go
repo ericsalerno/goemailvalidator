@@ -15,3 +15,13 @@ func TestLoadBlacklist(t *testing.T) {
 		t.Fatal("First item is incorrect!")
 	}
 }
+
+func TestCantLoadBlacklist(t *testing.T) {
+	c := Configuration{}
+
+	c.LoadBlacklist("someFileThatDoesntExist.blargh")
+
+	if len(c.HostList) != 0 {
+		t.Fatal("Somehow got some stuff in hostlist!")
+	}
+}

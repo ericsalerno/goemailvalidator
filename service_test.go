@@ -1,6 +1,11 @@
 package main
 
-import "testing"
+import (
+	"bytes"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+)
 
 func TestServerCreate(t *testing.T) {
 	c := Configuration{
@@ -62,5 +67,128 @@ func TestServerRegexes(t *testing.T) {
 
 	if b.validEmailUser.MatchString("b&l*a4{#'1_+r=gh?12}3~-.|^as%df$!") == false {
 		t.Fatal("Invalid user regex (special characters)!")
+	}
+}
+
+func TestGetValidResponseOutput(t *testing.T) {
+	r := request{}
+	r.inputEmail = "testing@thing.com"
+	r.inputHost = "thing.com"
+	r.inputUser = "testing"
+
+	s := Service{}
+
+	response := s.getResponseOutput(&r, true)
+
+	if response.Status != 200 {
+		t.Fatal("Invalid response code!")
+	}
+
+	if response.Message != "OK" {
+		t.Fatal("Invalid message!")
+	}
+
+	if response.Email != r.inputEmail {
+		t.Fatal("Invalid email address!")
+	}
+
+	if response.Valid != true {
+		t.Fatal("Invalid response valid!")
+	}
+
+	if response.Host != r.inputHost {
+		t.Fatal("Invalid response host!")
+	}
+
+	if response.User != r.inputUser {
+		t.Fatal("Invalid response user!")
+	}
+}
+
+func TestGetResponseError(t *testing.T) {
+	r := request{}
+	r.inputEmail = "testing@thing.com"
+	r.inputHost = "thing.com"
+	r.inputUser = "testing"
+
+	s := Service{}
+
+	response := s.getResponseError(&r, "Something or other")
+
+	if response.Status != 500 {
+		t.Fatal("Invalid response code!")
+	}
+
+	if response.Message != "Something or other" {
+		t.Fatal("Invalid message!")
+	}
+
+	if response.Email != r.inputEmail {
+		t.Fatal("Invalid email address!")
+	}
+
+	if response.Valid != false {
+		t.Fatal("Invalid response valid!")
+	}
+
+	if response.Host != r.inputHost {
+		t.Fatal("Invalid response host!")
+	}
+
+	if response.User != r.inputUser {
+		t.Fatal("Invalid response user!")
+	}
+}
+
+func TestServeHTTP(t *testing.T) {
+	s := Service{
+		Config: &Configuration{
+			Port: 8081,
+		},
+	}
+	s.buildRegularExpressions()
+
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(s.ServeHTTP)
+
+	body := []byte(`email=test@test.com`)
+	req, _ := http.NewRequest("POST", "http://localhost/", bytes.NewBuffer(body))
+	req.Header.Set("Content-type", "application/x-www-form-urlencoded")
+
+	handler.ServeHTTP(rr, req)
+
+	if status := rr.Code; status != http.StatusOK {
+		t.Fatalf("Handler returned invalid status! Got %v want %v %v", status, http.StatusOK, rr.Body)
+	}
+}
+
+func TestFailureServeHTTP(t *testing.T) {
+	s := Service{
+		Config: &Configuration{
+			Port: 8081,
+		},
+	}
+	s.buildRegularExpressions()
+
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(s.ServeHTTP)
+
+	body := []byte(`email=blargh!`)
+	req, _ := http.NewRequest("POST", "http://localhost/", bytes.NewBuffer(body))
+	req.Header.Set("Content-type", "application/x-www-form-urlencoded")
+
+	handler.ServeHTTP(rr, req)
+
+	if status := rr.Code; status != http.StatusInternalServerError {
+		t.Fatalf("Handler returned invalid status! Got %v want %v %v", status, http.StatusInternalServerError, rr.Body)
+	}
+
+	req, _ = http.NewRequest("POST", "http://localhost/", nil)
+	req.Header.Set("Content-type", "application/x-www-form-urlencoded")
+
+	handler.ServeHTTP(rr, req)
+
+	if status := rr.Code; status != http.StatusInternalServerError {
+		t.Fatalf("Handler returned invalid status! Got %v want %v %v", status, http.StatusInternalServerError, rr.Body)
 	}
 }
