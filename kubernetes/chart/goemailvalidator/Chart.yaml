@@ -1,0 +1,13 @@
+name: goemailvalidator
+version: 0.1.0
+appVersion: 1.0.0
+description: Fill this in
+keywords:
+- fill
+- this
+- in
+home: https://github.com/ericsalerno/goemailvalidator
+maintainers:
+- name: Eric Salerno
+  email: nobody@foo.com
+engine: gotpl
